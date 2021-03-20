@@ -1,3 +1,4 @@
+import 'package:TouristGuideApp/services/auth.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -6,12 +7,19 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  AuthService _auth = AuthService();
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         body: Column(
           children: [
+            ElevatedButton(
+              child: Text('Sign Out'),
+              onPressed: () async {
+                await _auth.SignOut();
+              },
+            ),
             Padding(
               padding: EdgeInsets.fromLTRB(15, 20, 20, 15),
               child: Container(
@@ -110,7 +118,7 @@ class _HomeState extends State<Home> {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -158,6 +166,7 @@ class CardView extends StatelessWidget {
           Spacer(),
           Text(
             tittle,
+            // ignore: deprecated_member_use
             style: Theme.of(context).textTheme.title.copyWith(fontSize: 15),
           ),
           Spacer(),
