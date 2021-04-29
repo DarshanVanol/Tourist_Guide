@@ -1,6 +1,7 @@
 import 'package:TouristGuideApp/Model/User.dart';
 import 'package:TouristGuideApp/pages/Authentication/Authenticate.dart';
 import 'package:TouristGuideApp/pages/home.dart';
+import 'package:TouristGuideApp/pages/start.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ class _WrapperState extends State<Wrapper> {
     print(user);
 
     if (user == null) {
-      return Authenticate();
+      return Start();
     } else {
       return Home();
     }

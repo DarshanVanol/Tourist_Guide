@@ -1,4 +1,5 @@
 import 'package:TouristGuideApp/Model/User.dart';
+import 'package:TouristGuideApp/services/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
@@ -28,6 +29,8 @@ class AuthService {
       AuthResult result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
       FirebaseUser user = result.user;
+
+      await DatabaseService(uid: user.uid).newUserData('', '');
       return _userFromFirebaseUser(user);
     } catch (e) {
       print(e);
@@ -39,6 +42,7 @@ class AuthService {
     try {
       AuthResult result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+
       FirebaseUser user = result.user;
       return _userFromFirebaseUser(user);
     } catch (e) {
@@ -52,6 +56,14 @@ class AuthService {
       return await _auth.signOut();
     } catch (e) {
       print(e);
+      return null;
+    }
+  }
+
+  getCurrentUser() {
+    try {
+      return _auth.currentUser();
+    } catch (e) {
       return null;
     }
   }

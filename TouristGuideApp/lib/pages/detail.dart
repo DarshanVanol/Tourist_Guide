@@ -1,18 +1,99 @@
+import 'package:TouristGuideApp/pages/hotel.dart';
+import 'package:TouristGuideApp/pages/restourant.dart';
+import 'package:TouristGuideApp/pages/weather.dart';
+import 'package:TouristGuideApp/services/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:TouristGuideApp/services/database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Detail extends StatefulWidget {
+  final String id;
+
+  const Detail({Key key, this.id}) : super(key: key);
   @override
-  _DetailState createState() => _DetailState();
+  _DetailState createState() => _DetailState(id);
 }
 
 class _DetailState extends State<Detail> {
+  AuthService _auth = new AuthService();
+
+  final String id;
+  Map reqMap;
+  String x = 'x';
+  Map reqList;
+  String name = '';
+  String description = '';
+  Map photo;
+  List group;
+  List items;
+  String prefix;
+  String suffix;
+  var lat;
+  var lon;
+  int height;
+  int width;
+  String latitude;
+  String longitude;
+  bool whishlist = false;
+  String imgurl =
+      'https://user-images.githubusercontent.com/194400/49531010-48dad180-f8b1-11e8-8d89-1e61320e1d82.png';
+  Map loc;
+  String city = '';
+  _DetailState(this.id);
+
+  getdetails(id) async {
+    String url =
+        'https://api.foursquare.com/v2/venues/$id?v=20210323&client_id=1YVDDPKVU2GWBJ4AXO1N2Z0NDVLM5XSYEJGIDGVJ5VLIXQZ3&client_secret=SBTXG4HKMKSVSV1PE0JMSH2RYYZV4GBKHXSD4LGUV14IY3HP';
+    Response response = await Dio().get(url);
+    if (response.statusCode == 200) {
+      setState(() {
+        reqMap = response.data['response'];
+        reqList = reqMap['venue'];
+        name = reqList['name'];
+        description = reqList['description'];
+        photo = reqList['photos'];
+        group = photo['groups'];
+        items = group[0]['items'];
+        prefix = items[0]['prefix'];
+        suffix = items[0]['suffix'];
+        height = items[0]['height'];
+        width = items[0]['width'];
+        loc = reqList['location'];
+        city = loc['city'];
+        lat = loc['lat'];
+        lon = loc['lng'];
+        latitude = '$lat';
+        longitude = '$lon';
+
+        imgurl = '$prefix$width$x$height$suffix';
+        // reqList = reqMap['venue'];
+      });
+    }
+
+    print(reqList);
+    print(latitude);
+
+    //print(description);
+    // print(name);
+    // print(description);
+  }
+
+  initState() {
+    print(id);
+    getdetails(id);
+
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.amber[100],
         appBar: AppBar(
-          title: Text('Taj Mahal'),
+          title: Text(name),
           elevation: 0,
           backgroundColor: Colors.transparent,
         ),
@@ -20,14 +101,12 @@ class _DetailState extends State<Detail> {
           child: Column(children: [
             Container(
               decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: NetworkImage(imgurl), fit: BoxFit.cover),
                 borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(30),
                     bottomRight: Radius.circular(30)),
                 color: Colors.amber[500],
-              ),
-              child: Image(
-                image: AssetImage('assets/taj2.jpg'),
-                fit: BoxFit.cover,
               ),
               height: 200,
               width: MediaQuery.of(context).size.width,
@@ -39,7 +118,13 @@ class _DetailState extends State<Detail> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/restourant');
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Hotel(
+                                    lat: lat,
+                                    lon: lon,
+                                  )));
                     },
                     icon: Icon(
                       Icons.restaurant,
@@ -48,7 +133,13 @@ class _DetailState extends State<Detail> {
                   ),
                   IconButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/hotel');
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Restourant(
+                                    lat: lat,
+                                    lon: lon,
+                                  )));
                     },
                     icon: Icon(
                       Icons.hotel,
@@ -57,7 +148,13 @@ class _DetailState extends State<Detail> {
                   ),
                   IconButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/weather');
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Weather(
+                                    lat: lat,
+                                    lon: lon,
+                                  )));
                     },
                     icon: Icon(
                       Icons.cloud,
@@ -65,9 +162,7 @@ class _DetailState extends State<Detail> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/place');
-                    },
+                    onPressed: () {},
                     icon: Icon(
                       Icons.place,
                       color: Colors.grey[800],
@@ -80,6 +175,7 @@ class _DetailState extends State<Detail> {
               color: Colors.amber[900],
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(15, 5, 0, 0),
@@ -91,6 +187,28 @@ class _DetailState extends State<Detail> {
                         fontSize: 20),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 170),
+                  child: Checkbox(
+                    value: whishlist,
+                    onChanged: (bool value) async {
+                      FirebaseUser result = await _auth.getCurrentUser();
+                      if (value == true) {
+                        DatabaseService(uid: result.uid)
+                            .updateUserData(id, name);
+                      } else if (value == false) {
+                        DatabaseService(uid: result.uid)
+                            .deleteUserData(id, name);
+                      }
+
+                      setState(() {
+                        whishlist = value;
+                      });
+                    },
+                    activeColor: Colors.amber,
+                  ),
+                ),
+                Text('Whishist')
               ],
             ),
             Padding(
@@ -98,10 +216,13 @@ class _DetailState extends State<Detail> {
               child: Container(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'The Taj Mahal is located on the right bank of the Yamuna River in a vast Mughal garden that encompasses nearly 17 hectares, in the Agra District in Uttar Pradesh. It was built by Mughal Emperor Shah Jahan in memory of his wife Mumtaz Mahal with construction starting in 1632 AD and completed in 1648 AD, with the mosque, the guest house and the main gateway on the south, the outer courtyard and its cloisters were added subsequently and completed in 1653 AD. The existence of several historical and Quaranic inscriptions in Arabic script have facilitated setting the chronology of Taj Mahal. For its construction, masons, stone-cutters, inlayers, carvers, painters, calligraphers, dome builders and other artisans were requisitioned from the whole of the empire and also from the Central Asia and Iran. Ustad-Ahmad Lahori was the main architect of the Taj Mahal. ',
-                    style: TextStyle(fontSize: 17, color: Colors.grey[800]),
-                  ),
+                  child: description == null
+                      ? Text('data not found')
+                      : Text(
+                          description,
+                          style:
+                              TextStyle(fontSize: 17, color: Colors.grey[800]),
+                        ),
                 ),
                 decoration: BoxDecoration(
                   color: Colors.amber[400],

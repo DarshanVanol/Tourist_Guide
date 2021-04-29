@@ -1,5 +1,6 @@
 import 'package:TouristGuideApp/loading/Loading.dart';
 import 'package:TouristGuideApp/services/auth.dart';
+
 import 'package:flutter/material.dart';
 
 class SignIn extends StatefulWidget {
@@ -92,11 +93,14 @@ class _SignInState extends State<SignIn> {
                                 dynamic result =
                                     await _auth.SignInwithEmailandPassword(
                                         email, password);
+
                                 if (result == null) {
                                   setState(() {
                                     error = 'Invalid Email or password!';
                                     loading = false;
                                   });
+                                } else {
+                                  loading = false;
                                 }
                               }
                             },
